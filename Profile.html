@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Profile</title>
+    <script src="https://www.gstatic.com/firebasejs/4.10.1/firebase.js"></script>
+    <script>
+        // Initialize Firebase
+        var config = {
+            apiKey: "AIzaSyAxdQjjI55fBtzpm6dOcij-p015y1XcoW0",
+            authDomain: "thecryptocave.firebaseapp.com",
+            databaseURL: "https://thecryptocave.firebaseio.com",
+            projectId: "thecryptocave",
+            storageBucket: "thecryptocave.appspot.com",
+            messagingSenderId: "245655448308"
+        };
+        firebase.initializeApp(config);
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", sans-serif}
+        body, html {
+            height: 100%;
+            line-height: 1.8;
+        }
+        /* Full height image header */
+        .bgimg-1 {
+            background-position: center;
+            background-size: cover;
+            background-image: url("/w3images/mac.jpg");
+            min-height: 100%;
+        }
+        .w3-bar .w3-button {
+            padding: 9px;
+        }
+        .button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            padding: 16px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            -webkit-transition-duration: 0.4s; /* Safari */
+            transition-duration: 0.4s;
+            cursor: pointer;
+        }
+
+        .button4 {
+            background-color: white;
+            color: black;
+            border: 2px solid #e7e7e7;
+        }
+
+        .button4:hover {background-color: #e7e7e7;}
+    </style>
+    <script>
+        var email, uid, emailVerified, displayName, photoURL, phoneNumber, providerData;
+        function setUserData(uid,USDollars, bitcoin,displayName, portfolio, change) {
+            var UserDatabase = firebase.database();
+            UserDatabase.ref("users/"+ uid).set({
+                uid: uid,
+                USDollars: USDollars,
+                bitcoin: bitcoin,
+                displayName: displayName,
+                portfolio: portfolio,
+                change: change
+            });
+        }
+
+
+
+        initApp = function() {
+            firebase.auth().onAuthStateChanged(function(user) {
+                if (user) {
+                    // User is signed in.
+                    displayName = user.displayName;
+                    email = user.email;
+                    emailVerified = user.emailVerified;
+                    photoURL = user.photoURL;
+                    uid = user.uid;
+                    phoneNumber = user.phoneNumber;
+                    providerData = user.providerData;
+                    user.getIdToken().then(function(accessToken) {
+                        JSON.stringify({
+                            displayName: displayName,
+                            email: email,
+                            emailVerified: emailVerified,
+                            phoneNumber: phoneNumber,
+                            photoURL: photoURL,
+                            uid: uid,
+                            accessToken: accessToken,
+                            providerData: providerData
+                        }, null, '  ');
+                    });
+                    document.getElementById('profile').style.textAlign = "left-center";
+                    document.getElementById('profile').style.padding = "100px";
+                    document.getElementById('profile').innerHTML =
+                        "Username: " + displayName + "<br/>" +
+                        "Email: " + email + "<br/>";
+                    //document.getElementById("uid").innerHTML = uid;
+                    var amountList = []
+
+                    firebase.database().ref("users/" + uid).once("value", function(snapshot){
+
+                        amountList = [snapshot.child('bitcoin').val(), snapshot.child('bitcoinCash').val(), snapshot.child('cardano').val(), snapshot.child('dash').val(), snapshot.child('eos').val(), snapshot.child('ethereum').val(), snapshot.child('iota').val(), snapshot.child('litecoin').val(), snapshot.child('monero').val(), snapshot.child('nem').val()];
+
+                        document.getElementById("profile").innerHTML += "Portfolio value: " + snapshot.child("portfolio").val() + "<br/>";
+                        document.getElementById("profile").innerHTML += "US Dollars: " + snapshot.child("USDollars").val() + "<br/>";
+                        /*                       document.getElementById("profile").innerHTML += "Bitcoin: " + snapshot.child("bitcoin").val()+ "<br/>";
+                                               document.getElementById("profile").innerHTML += "BitcoinCash: " + snapshot.child("bitcoinCash").val()+ "<br/>";
+                                               document.getElementById("profile").innerHTML += "Cardano: " + snapshot.child("cardano").val();*/
+                        document.getElementById('profile').innerHTML += '<br/><button id="profilebutton" class="button button4">Sign out</button><br/>';
+
+                        //console.log(amountList)
+
+                        var test = firebase.database().ref("coins").orderByKey();
+                        var counter = 0;
+                        test.once('value', function(snapshot1){
+                            snapshot1.forEach(function(childSnapshot){
+
+                                var usd = childSnapshot.child("price_usd").val();
+                                var name = childSnapshot.child("id").val();
+                                //var amount = document.getElementById("number" + counter).innerHTML;
+
+                                //console.log(amountList);
+                                console.log(name);
+                                //console.log(amount);
+                                console.log(usd);
+                                console.log(amountList[counter]);
+
+                                var change24 = childSnapshot.child("percent_change_24h").val();
+
+                                document.getElementById(name).innerHTML ="<center>" + parseFloat(amountList[counter]) * parseFloat(usd) + "</center>";
+                                counter = counter + 1;
+                                //document.getElementById("name" + counter).innerHTML = name;
+                                //document.getElementById("usd" + counter).innerHTML = usd;
+                                //document.getElementById("change24" + counter).innerHTML = change24;
+                                //console.log(usd)
+                            });
+                        });
+
+                        document.getElementById('number1').innerHTML = "<center>" + snapshot.child('bitcoin').val() + "</center>"
+                        document.getElementById('number2').innerHTML = "<center>" + snapshot.child('bitcoinCash').val() + "</center>"
+                        document.getElementById('number3').innerHTML = "<center>" +  snapshot.child('cardano').val() + "</center>"
+                        document.getElementById('number4').innerHTML = "<center>" + snapshot.child('dash').val() + "</center>"
+                        document.getElementById('number5').innerHTML = "<center>" + snapshot.child('eos').val() + "</center>"
+                        document.getElementById('number6').innerHTML = "<center>" + snapshot.child('ethereum').val() + "</center>"
+                        document.getElementById('number7').innerHTML = "<center>" + snapshot.child('iota').val() + "</center>"
+                        document.getElementById('number8').innerHTML = "<center>" + snapshot.child('litecoin').val() + "</center>"
+                        document.getElementById('number9').innerHTML = "<center>" + snapshot.child('monero').val() + "</center>"
+                        document.getElementById('number10').innerHTML = "<center>" + snapshot.child('nem').val() + "</center>"
+
+                        document.getElementById("profilebutton").onclick = function () {
+                            firebase.auth().signOut()
+                        };
+                    });
+
+               /* var test = firebase.database().ref("coins").orderByKey();
+                var counter = 0;
+                test.once('value', function(snapshot1){
+                    snapshot1.forEach(function(childSnapshot){
+                        counter = counter + 1;
+                        var usd = childSnapshot.child("price_usd").val();
+                        var name = childSnapshot.child("id").val();
+                        //var amount = document.getElementById("number" + counter).innerHTML;
+
+                        console.log(amountList);
+                        console.log(name);
+                        //console.log(amount);
+                        console.log(usd);
+                        console.log(amountList[counter]);
+
+                        var change24 = childSnapshot.child("percent_change_24h").val();
+
+                        document.getElementById(name).innerHTML = parseFloat(amountList[counter]) * parseFloat(usd);
+                        //document.getElementById("name" + counter).innerHTML = name;
+                        //document.getElementById("usd" + counter).innerHTML = usd;
+                        //document.getElementById("change24" + counter).innerHTML = change24;
+                        //console.log(usd)
+                });
+            }); */
+
+
+                    var check = firebase.database().ref("users");
+                    check.once("value")
+                        .then(function(snapshot){
+                            console.log(uid);
+                            var already = snapshot.child(uid).exists();
+                            if(already == false){
+                                setUserData(uid,10000,1,displayName,10000);
+                                initCoins(0,uid);
+                                updateprofile();
+                            }
+                        });
+                } else {
+                    // User is signed out.
+                    document.getElementById('profile').innerHTML = '<button id="profilebutton" class="button button4">Sign in</button>';
+                    document.getElementById("profilebutton").onclick = function () {
+                        location.href = "sign_in.html";
+                    };
+                }
+            }, function(error) {
+                console.log(error);
+            });
+        };
+
+
+
+        function updateprofile(){ /* shows new values */
+            console.log(document.getElementById("uid").innerHTML);
+            console.log(document.getElementById("profile").innerHTML);
+            firebase.database().ref("users/" + document.getElementById("uid").innerHTML).once("value", function(snapshot){
+                document.getElementById("profile").innerHTML += "Portfolio value: " + snapshot.child("portfolio").val() + "<br/>";
+                document.getElementById("profile").innerHTML += "Bitcoin: " + snapshot.child("bitcoin").val() + "<br/>";
+                document.getElementById("profile").innerHTML += "US Dollars: " + snapshot.child("USDollars").val();
+                document.getElementById('moneyDollars').innerHTML = 'US Dollars:' + snapchat.child('USDollars').val();
+                document.getElementById('valuePortfolio').innerHTML = 'Portfolio Value:' + snapshot.child('portfolio').val();
+            });
+        }
+        window.addEventListener('load', function() {
+            initApp();
+            //document.getElementById("profile").innerHTML += "Portfolio value: " + portfolioData["Portfolio value: "];
+            //document.getElementById("profile").innerHTML += "Bitcoin: " + portfolioData["Bitcoin: "];
+            //document.getElementById("profile").innerHTML += "US Dollars: " + portfolioData["US Dollars: "];
+        });
+    </script>
+</head>
+<body>
+<div style="padding: 111px 10px" id="profileTable">
+    <h3 class="w3-display-bottommiddle"></h3>
+    <p class="w3-display-bottommiddle" ID="valuePortfolio"></p>
+    <p class="w3-display-bottommiddle w3-large" ID='valuePortfolio'></p>
+    <table border="0px" width = "75%" align="center">
+        <tr>
+            <td><center><u>Cryptocurrency</u></center></td><td><center><u>Number</u></center></td><td><center><u>Value</u></center></td>
+        </tr>
+        <tr>
+            <td><center>Bitcoin</center></td>
+            <td id = "number1"></td>
+            <td id = "bitcoin"><center>0</center></td> <!--shows you number of each coin -->
+        </tr>
+        <tr>
+            <td><center>Bitcoin-Cash</center></td>
+            <td id="number2"></td>
+            <td id = "bitcoin-cash"><center>0</center></td>
+        </tr>
+        <tr>
+            <td><center>Cardano</center></td>
+            <td id="number3"></td>
+            <td id = "cardano"><center>0</center></td>
+        </tr>
+        <tr>
+            <td><center>Dash</center></td>
+            <td id="number4"></td>
+            <td id = "dash"><center>0</center></td>
+        </tr>
+        <tr>
+            <td><center>EOS</center></td>
+            <td id="number5"></td>
+            <td id = "eos"><center>0</center></td>
+        </tr>
+        <tr>
+            <td><center>Ethereum</center></td>
+            <td id="number6"></td>
+            <td id = "ethereum"><center>0</center></td>
+        </tr>
+        <tr>
+            <td><center>IOTA</center></td>
+            <td id="number7"></td>
+            <td id = "iota"><center>0</center></td>
+        </tr>
+        <tr>
+            <td><center>Litecoin</center></td>
+            <td id="number8"></td>
+            <td id = "litecoin"><center>0</center></td>
+        </tr>
+        <tr>
+            <td><center>Monero</center></td>
+            <td id="number9"></td>
+            <td id = "monero"><center><center>0</center></center></td>
+        </tr>
+        <tr>
+            <td><center>NEM</center></td>
+            <td id="number10"></td>
+            <td id = "nem"><center>0</center></td>
+        </tr>
+    </table>
+</div>
+<p class="w3-display-topleft" style = "padding-top: 300px" id="profile">
+</p>
+<p style="color:white" id="uid"></p>
+<div class="w3-top">
+    <div class="w3-bar w3-black w3-card" id="myNavbar">
+        <a href="https://thecryptocave.firebaseapp.com/#home" class="w3-bar-item w3-button w3-wide"><i class="fa fa-home"></i>HOME</a>
+        <!-- Right-sided navbar links -->
+        <div class="w3-right w3-hide-small">
+            <a href="https://thecryptocave.firebaseapp.com/#about" class="w3-bar-item w3-button"><i class="fa fa-book"></i>TUTORIAL</a>
+            <a href="https://thecryptocave.firebaseapp.com/#pricing" class="w3-bar-item w3-button"><i class="fa fa-usd"></i>MARKET</a>
+            <a href="https://thecryptocave.firebaseapp.com/#work" class="w3-bar-item w3-button"><i class="fa fa-line-chart"></i>LEADERBOARD</a>
+            <a href="https://thecryptocave.firebaseapp.com/#contact" class="w3-bar-item w3-button"><i class="fa fa-envelope"></i>CONTACT US</a>
+            <a href="https://thecryptocave.firebaseapp.com/Profile.html" class="w3-bar-item w3-button"><i class="fa fa-user"></i>MY PROFILE</a>
+        </div>
+        <!-- Hide right-floated links on small screens and replace them with a menu icon -->
+
+        <a href="javascript:void(0)" class="w3-bar-item w3-button w3-right w3-hide-large w3-hide-medium" onclick="w3_open()">
+            <i class="fa fa-bars"></i>
+        </a>
+    </div>
+</div>
+<nav class="w3-sidebar w3-bar-block w3-black w3-card w3-animate-left w3-hide-medium w3-hide-large" style="display:none" id="mySidebar">
+    <a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-padding-16">Close ×</a>
+    <a href="#about" onclick="w3_close()" class="w3-bar-item w3-button">TUTORIALS</a>
+    <a href="#pricing" onclick="w3_close()" class="w3-bar-item w3-button">MARKET</a>
+    <a href="#work" onclick="w3_close()" class="w3-bar-item w3-button">LEADERBOARD</a>
+    <a href="#contact" onclick="w3_close()" class="w3-bar-item w3-button">CONTACT US</a>
+    <a href="#team" onclick="w3_close()" class="w3-bar-item w3-button">MY PROFILE</a>
+</nav>
+</body>
+</html>

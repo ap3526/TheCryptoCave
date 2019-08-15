@@ -1,0 +1,792 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TheCryptoCave</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", sans-serif}
+        body, html {
+            height: 100%;
+            line-height: 1.8;
+        }
+        /* Full height image header */
+        .bgimg-1 {
+            background-position: center;
+            background-size: cover;
+            background-image: url("https://images.pexels.com/photos/325185/pexels-photo-325185.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260");
+            min-height: 100%;
+        }
+        .w3-bar .w3-button {
+            padding: 9px;
+        }
+        .button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            padding: 16px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            -webkit-transition-duration: 0.4s; /* Safari */
+            transition-duration: 0.4s;
+            cursor: pointer;
+        }
+
+        .button4 {
+            background-color: white;
+            color: black;
+            border: 2px solid #e7e7e7;
+        }
+
+        .button4:hover {background-color: #e7e7e7;}
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            padding: 12px 16px;
+            z-index: 1;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/4.10.1/firebase.js"></script>
+    <script>
+        // Initialize Firebase
+        var config = {
+            apiKey: "AIzaSyAxdQjjI55fBtzpm6dOcij-p015y1XcoW0",
+            authDomain: "thecryptocave.firebaseapp.com",
+            databaseURL: "https://thecryptocave.firebaseio.com", /*memory address of website*/
+            projectId: "thecryptocave",
+            storageBucket: "thecryptocave.appspot.com",
+            messagingSenderId: "245655448308"
+        };
+        firebase.initializeApp(config);
+    </script>
+
+    <script type="text/javascript">
+        function getCryptoData() {
+            fetch("https://api.coinmarketcap.com/v1/ticker/?limit=7")
+                .then((resp) => resp.json())
+        .then(function(data) {
+                //console.log(data[0]);
+                var database = firebase.database();
+                for (var x = 0; x < data.length; x++){
+                    database.ref('coins/' + data[x].id).set(data[x]);
+                }
+
+            })
+                .catch(function(error) {
+                    console.log(error);
+                });
+        }
+        /*user profile data to keep track of their net worth value*/
+        function setUserData(uid,USDollars, bitcoin,displayName, portfolio, change) {
+            var UserDatabase = firebase.database();
+            UserDatabase.ref("users/"+ uid).set({
+                uid: uid,
+                USDollars: USDollars,
+                bitcoin: bitcoin,
+                displayName: displayName,
+                portfolio: portfolio,
+                change: change
+            });
+        }
+        function initCoins(value,uid){
+
+            var UserDatabase = firebase.database();
+            UserDatabase.ref("users/"+ uid).update({
+                bitcoinCash: value,
+                cardano: value,
+                dash: value,
+                eos: value,
+                ethereum: value,
+                iota: value,
+                litecoin: value,
+                monero: value,
+                nem: value
+            });
+        }/*accessing datapage to update values of coins every refresh*/
+        function updateCoins(uid, name, value){
+            var user = firebase.auth().currentUser;
+            if(name == "bitcoin"){
+                firebase.database().ref("users/"+uid).update({
+                    bitcoin: value
+
+                });
+            }
+            if(name == "bitcoinCash"){
+                firebase.database().ref("users/"+uid).update({
+                    bitcoinCash: value
+                });
+
+            }
+            if(name == "cardano"){
+                firebase.database().ref("users/"+uid).update({
+                    cardano: value
+                });
+
+            }
+            if(name == "dash"){
+                firebase.database().ref("users/"+uid).update({
+                    dash: value
+                });
+
+            }
+            if(name == "eos"){
+                firebase.database().ref("users/"+uid).update({
+                    eos: value
+                });
+
+            }
+            if(name == "ethereum"){
+                firebase.database().ref("users/"+uid).update({
+                    ethereum: value
+                });
+
+            }
+            if(name == "iota"){
+                firebase.database().ref("users/"+uid).update({
+                    iota: value
+                });
+
+            }
+            if(name == "litecoin"){
+                firebase.database().ref("users/"+uid).update({
+                    litecoin: value
+                });
+
+            }
+            if(name == "monero"){
+                firebase.database().ref("users/"+uid).update({
+                    monero: value
+                });
+
+            }
+            if(name == "nem"){
+                firebase.database().ref("users/"+uid).update({
+                    nem: value
+                });
+
+            }
+
+        }
+        function updateUserData(uid, USDollars, portfolio, change){
+            var user = firebase.auth().currentUser;   /*using bitcoin data to update net worth*/
+            firebase.database().ref("users/" + uid).update({
+                USDollars: USDollars,
+                //bitcoin: bitcoin,
+                portfolio: portfolio,
+                change: change
+            });
+        }
+
+        function updatePortfolio(uid){
+            firebase.database().ref("coins").once("value", function(snapshot){
+                var bitcoin = snapshot.child("bitcoin/price_usd").val();
+                var bitcoin_chash = snapshot.child("bitcoin-cash/price_usd").val();
+                var cardano = snapshot.child("cardano/price_usd").val();
+                console.log("cardano: " + cardano);
+                var dash = snapshot.child("dash/price_usd").val();
+                var eos = snapshot.child("eos/price_usd").val();
+                var ethereum = snapshot.child("ethereum/price_usd").val();
+                var iota = snapshot.child("iota/price_usd").val();
+                var litecoin = snapshot.child("litecoin/price_usd").val();
+                var monero = snapshot.child("monero/price_usd").val();
+                var nem = snapshot.child("nem/price_usd").val();
+                var neo = snapshot.child("neo/price_usd").val();
+                var ripple = snapshot.child("ripple/price_usd").val();
+                var stellar = snapshot.child("stellar/price_usd").val();
+
+                firebase.database().ref("users/" + uid).once("value", function(snapshot){
+                    var newval = snapshot.child("USDollars").val();
+                    newval += (snapshot.child("bitcoin").val() * bitcoin);
+                    newval += (snapshot.child("bitcoinCash").val() * bitcoin_chash);
+                    newval += (snapshot.child("cardano").val() * cardano);
+                    console.log("cadano value in usd: " + (snapshot.child("cardano").val() * cardano));
+                    newval += (snapshot.child("dash").val() * dash);
+                    newval += (snapshot.child("eos").val() * eos);
+                    newval += (snapshot.child("ethereum").val() * ethereum);
+                    newval += (snapshot.child("iota").val() * iota);
+                    newval += (snapshot.child("litecoin").val() * litecoin);
+                    newval += (snapshot.child("monero").val() * monero);
+                    newval += (snapshot.child("nem").val() * nem);
+                    newval += (snapshot.child("neo").val() * neo);
+                    newval += (snapshot.child("ripple").val() * ripple);
+                    newval += (snapshot.child("stellar").val() * stellar);
+
+                    firebase.database().ref("users/" + uid).update({
+                        portfolio: newval
+                    });
+                });
+            });
+
+        }
+        function updatePort(uid, USD, numberOfCoins, priceOfCoin){
+            value = USD + (numberOfCoins * priceOfCoin)
+            value = Math.round(value)
+            firebase.database().ref("users/" + uid).update({
+                portfolio: value
+            })
+            return value
+        }
+
+        function updateChange(uid, portfolioValue){
+            change = (portfolioValue - 10000) / 10000 /*calculates percent change from value last checked to current value*/
+            change = change * 100
+            newChange = Math.round(change)
+            firebase.database().ref("users/" + uid).update({
+                change: newChange
+            })
+            return newChange
+        }
+        function mest(){
+            console.log("yes");
+        }
+        function updateleaderboard(){ /*show rankings of all users based on net worth*/
+            //get snapshot of all users
+            firebase.database().ref("users").once("value", function(snapshot){
+                var list = {};
+
+                //add users to dictionary in key/value pairs list[uid] = portfolio
+                //keys need to be distinct? so need to use uid not displayName
+                snapshot.forEach(function(childshot) {
+                    //update portfolio value for each user
+                    updatePortfolio(childshot.child("uid").val());
+                    list[childshot.child("uid").val()] = childshot.child("portfolio").val()
+                });
+
+                //find top 10 values and add their uid's to top10 in order
+                var top10 = [];
+                var maxkey = "";
+                var maxval = 0;
+                for(var i = 0; i < 10; i++) {
+                    maxval = 0;
+                    maxkey = null;
+                    for (var key in list) {
+                        if (list[key] > maxval && (top10.indexOf(key) === -1)){
+                            maxkey = key;
+                            maxval = list[key];
+                        }
+                    }
+                    top10.push(maxkey);
+                    document.getElementById("leaderboard" + (i+1)).innerHTML = "<center>" + (snapshot.child(maxkey).child("displayName").val()) + "</center>";
+                    document.getElementById("leaderboardportfoliovalue" + (i+1)).innerHTML = "<center>" + (snapshot.child(maxkey).child("portfolio").val()).toFixed(2) + "</center>";
+                    document.getElementById("change" + (i+1)).innerHTML = "<center>" + (snapshot.child(maxkey).child("change").val()) + "</center>";
+
+                    //console.log(snapshot.child(maxkey).child("displayName").val());
+                }
+            })
+        }
+        initApp = function() {
+            //var uid;
+            firebase.auth().onAuthStateChanged(function(user) {
+                if (user) {
+                    // User is signed in.
+                    var displayName = user.displayName;
+                    var email = user.email;  /*creating new user with their credentials and initializing as new object*/
+                    var emailVerified = user.emailVerified;
+                    var photoURL = user.photoURL;
+                    var uid = user.uid;
+                    var phoneNumber = user.phoneNumber;
+                    var providerData = user.providerData;
+                    user.getIdToken().then(function(accessToken) {
+                        JSON.stringify({
+                            displayName: displayName,
+                            email: email,
+                            emailVerified: emailVerified,
+                            phoneNumber: phoneNumber,
+                            photoURL: photoURL,
+                            uid: uid,
+                            accessToken: accessToken,
+                            providerData: providerData
+                        }, null, '  ');
+                    });
+                    document.getElementById('profile').innerHTML =
+                        "Username: " + displayName + "<br/>" +
+                        "Email: " + email;
+                    document.getElementById('profile').innerHTML += '<br/><button id="profilebutton" class="button button4">Sign out</button>';
+                    document.getElementById("profilebutton").onclick = function () {
+                        firebase.auth().signOut()
+                    };
+                    //document.getElementById("test").innerHTML = '<button id = "testbutton" class="button button4"><test</button>';
+                    //document.getElementById("testbutton").onclick = setUserData(uid,10000,0);
+                    //setUserData(uid,10000,0);
+
+                    //check that user exists or not; if user does not exist(new user) then they are added to database; if user does exists, nothing happens
+                    var check = firebase.database().ref("users");
+                    check.once("value")
+                        .then(function(snapshot){
+                            var already = snapshot.child(uid).exists();
+                            if(already == false){
+                                setUserData(uid,10000,0,displayName,10000, 0)
+                                initCoins(0,uid);
+                            }
+                        });
+                } else {
+                    // User is signed out.
+                    document.getElementById('profile').innerHTML = '<button id="profilebutton" class="button button4">Sign in</button>';
+                    document.getElementById("profilebutton").onclick = function () {
+                        location.href = "sign_in.html";
+                    };
+                }
+            }, function(error) {
+                console.log(error);
+            });
+            updateleaderboard();
+        };
+
+        window.addEventListener('load', function() {
+            initApp()
+        });
+        window.setInterval(function(){
+            getCryptoData();
+        }, 5000);
+
+
+        window.onload = getCryptoData();
+
+        var test = firebase.database().ref("coins").orderByKey();
+        var blah;
+        var counter = 0;
+        var btcprice = firebase.database().ref("coins/" + "bitcoin/" + "price_usd");
+        var ethprice = firebase.database().ref("coins/" + "ethereum/" + "price_usd");
+        var BTC = 0;
+        var ETH = 0;
+        test.once('value', function(snapshot){
+            snapshot.forEach(function(childSnapshot){
+                counter = counter + 1
+                var usd = childSnapshot.child("price_usd").val();
+                var name = childSnapshot.child("name").val();
+                var change24 = childSnapshot.child("percent_change_24h").val();
+                document.getElementById("name" + counter).innerHTML = name;
+                document.getElementById("usd" + counter).innerHTML = usd;
+                document.getElementById("change24" + counter).innerHTML = change24;
+                console.log(usd)
+            });
+            tes1 = snapshot.child("bitcoin");//.child("price_usd").val();
+            tes2 = tes1.child("price_usd").val();
+            console.log(tes2);
+        });
+        btcprice.on('value', function(snapshot){
+            BTC = parseFloat(snapshot.val());
+            //document.getElementById('bitcoinPrice').innerHTML = snapshot.val();
+            document.getElementById('bitcoinPrice').innerHTML = BTC;
+        });
+        btcprice.on('value', function(snapshot){
+            BTC = parseFloat(snapshot.val());
+            //document.getElementById('bitcoinPrice').innerHTML = snapshot.val();
+            document.getElementById('bitcoinPrice').innerHTML = BTC;
+        });
+
+        /*        function buy() {
+                    var user = firebase.auth().currentUser;
+                    firebase.database().ref("users/" + user.uid).once("value", function(snapshot){
+                        var user = firebase.auth().currentUser;
+                        USD = snapshot.child("USDollars").val();
+                        bit = snapshot.child("bitcoin").val();
+                        port = snapshot.child("portfolio").val();
+                        if( USD >= BTC){
+                            portfolio = USD + BTC * bit;
+                            portfolio = Math.round(portfolio)
+                            change = ((portfolio - 10000) / 10000) * 100
+                            updateUserData(user.uid, USD - BTC, bit + 1, portfolio, change);
+                            USD = Math.round(USD)
+                            window.alert("You have\n" + "bitcoin: " + (bit + 1) + '\nUS Dollars: ' + (USD - BTC));
+                        }
+                        else{
+                            window.alert("You do not have enough US Dollars to buy a bitcoin!")
+                        }
+                    });
+                }*/
+        /*        function showPrice(name){
+                    //var btcprice = firebase.database().ref("coins/" + "bitcoin/" + "price_usd");
+                    var value = document.getElementById(name).innerHTML;
+                    value = parseFloat(value);
+
+                    console.log(value);
+                    console.log(value+1);
+                }
+                */
+        //dictionary thing: do not change
+        var BTC_ID = "bitcoin";
+        var BTC_P = "usd1";
+        var BTCC_ID = "bitcoin-cash";
+        var BTCC_P = "usd2";
+        var CAR_ID = "cardano";
+        var CAR_P = "usd3";
+        var DAS_ID = "dash";
+        var DAS_P = "usd4";
+        var EOS_ID = "eos";
+        var EOS_P = "usd5";
+        var ETH_ID = "ethereum";
+        var ETH_P = "usd6"
+        var IOT_ID = "iota";
+        var IOT_P = "usd7";
+        var LTC_ID = "litecoin";
+        var LTC_P = "usd8";
+        var MON_ID = "monero";
+        var MON_P = "usd9";
+        var NEM_ID = "nem";
+        var NEM_P = "usd10";
+        /*        function cheat(name){
+                    var user = firebase.auth().currentUser;
+                    firebase.database().ref("users/" + user.uid).once("value", function(snapshot){
+                        var user = firebase.auth().currentUser;
+                        var bit = snapshot.child(name).val();
+
+                        console.log(bit);
+                    })
+                }*/
+
+
+        function buy(name,price){
+
+            var user = firebase.auth().currentUser;
+            console.log(user)
+            firebase.database().ref("users/" + user.uid).once("value", function(snapshot){
+                var user = firebase.auth().currentUser;
+                //numberOwned = snapshot.child(name).val();   //gets the number of the crypto currency the user has
+                USD = snapshot.child("USDollars").val();    //gets the amount of money the user has
+                var amount = prompt("How much would you like to buy?", "");
+                var value = document.getElementById(price).innerHTML * amount;   //gets the value of the crypto from its entry in the table
+                amount = parseFloat(amount);
+
+                if(name == "bitcoin-cash"){
+                   name = "bitcoinCash";
+                   }
+
+                numberOwned = snapshot.child(name).val();   //gets the number of the crypto currency the user has
+                value = parseFloat(value);  //makes value a float so we can do math
+                if (confirm("This costs " + value + " US Dollars. Confirm?")) {
+                    if(USD >= value){
+                        USD = USD - value;
+                        numberOwned = numberOwned + amount;
+                        portfolio = updatePort(user.uid, USD, numberOwned, value)
+                        change = updateChange(user.uid, portfolio)
+                        updateUserData(user.uid, USD,portfolio,change);
+                        updateCoins(user.uid,name,numberOwned);
+                        console.log("USD:",USD);
+                        console.log(name,":" ,numberOwned);
+                    }
+                    else{
+                        window.alert("You do not have enough USD to complete this purchase");
+                    }
+
+                }})
+        }
+
+        function sell(name, price){
+            var user = firebase.auth().currentUser;
+            firebase.database().ref("users/" + user.uid).once("value", function(snapshot){
+                    var user = firebase.auth().currentUser;
+                    USD = snapshot.child("USDollars").val();
+                    //numberOwned = snapshot.child(name).val();
+                    var amount = prompt("How much would you like to sell?", "");
+                    var value = document.getElementById(price).innerHTML * amount;   //gets the value of the crypto from its entry in the table
+                    value = parseFloat(value);  //makes value a float so we can do mat
+
+
+                    if(name == "bitcoin-cash"){
+                        name = "bitcoinCash";
+                    }
+
+                    numberOwned = snapshot.child(name).val();   //gets the number of the crypto currency the user has
+                    if(numberOwned >= amount){
+                        if (confirm("You will receivse " + value + " US Dollars. Confirm?")) {
+                            numberOwned = numberOwned - amount
+                            USD = USD + value
+                            portfolio = updatePort(user.uid, USD, numberOwned, value)
+                            change = updateChange(user.uid, portfolio)
+                            updateUserData(user.uid, USD, portfolio, change);
+                            updateCoins(user.uid, name, numberOwned)
+                            window.alert("You have\n" + name + ": " + numberOwned + '\nUS Dollars: ' + (USD));
+                        }
+                        else{
+                            window.alert('You do not have enough ' + name +'(s) to complete this transaction')
+                        }
+                    }
+                }
+            )};
+
+
+
+        var uid = "JTgLiQjcIeXk2IX676xuIwmDZNu2";
+    </script>
+
+</head>
+<body>
+
+<!-- Navbar (sit on top) -->
+<div class="w3-top">
+    <div class="w3-bar w3-black w3-card" id="myNavbar">
+        <a href="https://thecryptocave.firebaseapp.com/#home" class="w3-bar-item w3-button w3-wide"><i class="fa fa-home"></i>HOME</a>
+        <!-- Right-sided navbar links -->
+        <div class="w3-right w3-hide-small">
+ <!--           <div class = "dropdown"><i class = "fa fa-book"></i>
+                <span>SUPPLEMENTARY INFORMATION</span>
+                <div class = "dropdown-content">
+                    <a href = "tutorial.html">Tutorial</a>
+                    <a href = "history.html">Background Information</a>
+                </div>
+            </div>-->
+
+            <a href="https://thecryptocave.firebaseapp.com/#about" class="w3-bar-item w3-button"><i class="fa fa-book"></i>TUTORIAL</a>
+            <a href="https://thecryptocave.firebaseapp.com/#pricing" class="w3-bar-item w3-button"><i class="fa fa-usd"></i>MARKET</a>
+            <a href="https://thecryptocave.firebaseapp.com/#work" class="w3-bar-item w3-button"><i class="fa fa-line-chart"></i>LEADERBOARD</a>
+            <a href="https://thecryptocave.firebaseapp.com/#contact" class="w3-bar-item w3-button"><i class="fa fa-envelope"></i>CONTACT US</a>
+            <a href="https://thecryptocave.firebaseapp.com/Profile.html" class="w3-bar-item w3-button"><i class="fa fa-user"></i>MY PROFILE</a>
+        </div>
+        <!-- Hide right-floated links on small screens and replace them with a menu icon -->
+
+        <a href="javascript:void(0)" class="w3-bar-item w3-button w3-right w3-hide-large w3-hide-medium" onclick="w3_open()">
+            <i class="fa fa-bars"></i>
+        </a>
+    </div>
+</div>
+
+<!-- Sidebar on small screens when clicking the menu icon -->
+<nav class="w3-sidebar w3-bar-block w3-black w3-card w3-animate-left w3-hide-medium w3-hide-large" style="display:none" id="mySidebar">
+    <a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-padding-16">Close ×</a>
+    <a href="#about" onclick="w3_close()" class="w3-bar-item w3-button">TUTORIAL</a>
+    <a href="#pricing" onclick="w3_close()" class="w3-bar-item w3-button">MARKET</a>
+    <a href="#work" onclick="w3_close()" class="w3-bar-item w3-button">LEADERBOARD</a>
+    <a href="#contact" onclick="w3_close()" class="w3-bar-item w3-button">CONTACT US</a>
+    <a href="#team" onclick="w3_close()" class="w3-bar-item w3-button">MY PROFILE</a>
+</nav>
+
+<!-- Header with full-height image -->
+<header class="bgimg-1 w3-display-container w3-grayscale-min" id="home">
+    <div class="w3-display-topmiddle w3-text-black" style="padding:30px">
+        <p style = "font-family: Raleway; font-size: 500%">THECRYPTOCAVE</p>
+    </div>
+    <div class="w3-display-middle w3-text-black" style='padding:25px'>
+        <p><a href="tutorial.html" class="w3-button w3-black w3-padding-large w3-large w3-margin-top w3-opacity w3-hover-opacity-off">Start learning and trading today!</a></p>
+    </div>
+    <div class="w3-display-bottomleft w3-text-grey w3-large" style="padding:24px 48px">
+        <i class="fa fa-facebook-official w3-hover-opacity"></i>
+        <i class="fa fa-instagram w3-hover-opacity"></i>
+        <i class="fa fa-snapchat w3-hover-opacity"></i>
+        <i class="fa fa-pinterest-p w3-hover-opacity"></i>
+        <i class="fa fa-twitter w3-hover-opacity"></i>
+        <i class="fa fa-linkedin w3-hover-opacity"></i>
+    </div>
+</header>
+<!-- About Section -->
+<div class="w3-container" style="padding:128px 16px" id="about">
+    <h3 class="w3-center">Crypto Trading Tutorial</h3>
+    <p class="w3-center w3-large">Our tutorial is the perfect way to learn how crypto trading and our simulation game work</p>
+    <div class="w3-row-padding w3-center" style="margin-top:64px">
+        <div class="w3-third">
+            <i class="fa fa-cog w3-margin-bottom w3-jumbo w3-center"></i>
+            <p class="w3-large w3-center"><a HREF="tutorial.html">TUTORIAL</a>
+        </div>
+        <div class = "w3-third">
+            <img src="logo.jpg" alt="Logo">
+        </div>
+        <div class="w3-third">
+            <i class="fa fa-desktop w3-margin-bottom w3-jumbo w3-center"></i>
+            <p class="w3-large"><a HREF="history.html">BACKGROUND INFORMATION</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Section -->
+<div class="w3-container" style="padding:128px 16px" id="team">
+    <h3 class="w3-center">MY PROFILE</h3>
+    <p class="w3-center" ID="profile"></p>
+    <!-- Leaderboard Section -->
+    <div class="w3-container" style="padding:128px 16px" id="work">
+        <h3 class="w3-center">LEADERBOARD</h3>
+        <p class="w3-center" ID="test"></p>
+        <p class="w3-center w3-large">Here are the Top 10 Cryptocurrency traders!</p>
+        <table border="2px" width = "1500px">
+            <tr>
+                <td><center>Rank</center></td><td><center>Username</center></td><td><center>Portfolio Value</center></td><td><center>% Change</center></td>
+            </tr>
+            <tr>
+                <td><center>1</center></td><td id="leaderboard1"></td><td id="leaderboardportfoliovalue1"></td><td id = "change1" ></td>
+            </tr>
+            <tr>
+                <td><center>2</center></td><td id="leaderboard2"></td><td id="leaderboardportfoliovalue2"></td><td id = "change2" ></td>
+            </tr>
+            <tr>
+                <td><center>3</center></td><td id="leaderboard3"></td><td id="leaderboardportfoliovalue3"></td><td id = "change3" ></td>
+            </tr>
+            <tr>
+                <td><center>4</center></td><td id="leaderboard4"></td><td id="leaderboardportfoliovalue4"></td><td id = "change4" ></td>
+            </tr>
+            <tr>
+                <td><center>5</center></td><td id="leaderboard5"></td><td id="leaderboardportfoliovalue5"></td><td  id = "change5" ></td>
+            </tr>
+            <tr>
+                <td><center>6</center></td><td id="leaderboard6"></td><td id="leaderboardportfoliovalue6"></td><td  id = "change6" ></td>
+            </tr>
+            <tr>
+                <td><center>7</center></td><td id="leaderboard7"></td><td id="leaderboardportfoliovalue7"></td><td  id = "change7" ></td>
+            </tr>
+            <tr>
+                <td><center>8</center></td><td id="leaderboard8"></td><td id="leaderboardportfoliovalue8"></td><td  id = "change8" ></td>
+            </tr>
+            <tr>
+                <td><center>9</center></td><td id="leaderboard9"></td><td id="leaderboardportfoliovalue9"><td  id = "change9" ></td>
+            </tr>
+            <tr>
+                <td><center>10</center></td><td id="leaderboard10"></td><td id="leaderboardportfoliovalue10"></td><td  id = "change10" ></td>
+            </tr>
+        </table>
+
+    </div>
+
+    <!-- Modal for full size images on click-->
+    <div id="modal01" class="w3-modal w3-black" onclick="this.style.display='none'">
+        <span class="w3-button w3-xxlarge w3-black w3-padding-large w3-display-topright" title="Close Modal Image">×</span>
+        <div class="w3-modal-content w3-animate-zoom w3-center w3-transparent w3-padding-64">
+            <img id="img01" class="w3-image">
+            <p id="caption" class="w3-opacity w3-large"></p>
+        </div>
+    </div>
+</div>
+
+<!-- Market Section -->
+<div class="w3-container w3-center w3-dark-grey" style="padding:128px 16px" id="pricing">
+    <h3>THE MARKET</h3>
+    <p class="w3-large">See How Cryptocurrencies are Doing and Buy / Sell Them Here!</p>
+    <table border=2px width="1000px" align="center">
+        <tr font-size=16px>
+            <th>Crypto</th>
+            <th>Price</th>
+            <th>Change (24h)</th>
+            <th></th>
+            <th></th>
+        </tr>
+        <tr>
+            <td id= "name1"> </td>
+            <td id="usd1">1</td>
+            <td id="change241"></td>
+            <td><button onclick = "buy(BTC_ID,BTC_P)">Buy</button></td>
+            <td><button onclick = "sell(BTC_ID,BTC_P)">Sell</button></td>
+        </tr>
+        <tr>
+            <td id= "name2"></td>
+            <td id="usd2">1</td>
+            <td id="change242"></td>
+            <td><button onclick = "buy(BTCC_ID,BTCC_P)">Buy</button></td>
+            <td><button onclick = "sell(BTCC_ID,BTCC_P)">Sell</button></td>
+        </tr>
+        <tr>
+            <td id= "name3"></td>
+            <td id="usd3">1</td>
+            <td id="change243"></td>
+            <td><button onclick = "buy(CAR_ID,CAR_P)">Buy</button></td>
+            <td><button onclick = "sell(CAR_ID,CAR_P)">Sell</button></td>
+        </tr>
+        <tr>
+            <td id= "name4"></td>
+            <td id="usd4">1</td>
+            <td id="change244"></td>
+            <td><button onclick = "buy(DAS_ID,DAS_P)">Buy</button></td>
+            <td><button onclick = "sell(DAS_ID,DAS_P)">Sell</button></td>
+        </tr>
+        <tr>
+            <td id= "name5"></td>
+            <td id="usd5">1</td>
+            <td id="change245"></td>
+            <td><button onclick = "buy(EOS_ID,EOS_P)">Buy</button></td>
+            <td><button onclick = "sell(EOS_ID,EOS_P)">Sell</button></td>
+        </tr>
+        <tr>
+            <td id= "name6"></td>
+            <td id="usd6">1</td>
+            <td id="change246"></td>
+            <td><button onclick = "buy(ETH_ID,ETH_P)">Buy</button></td>
+            <td><button onclick = "sell(ETH_ID,ETH_P)">Sell</button></td>
+        </tr>
+        <tr>
+            <td id= "name7"></td>
+            <td id="usd7">1</td>
+            <td id="change247"></td>
+            <td><button onclick = "buy(IOT_ID,IOT_P)">Buy</button></td>
+            <td><button onclick = "sell(IOT_ID,IOT_P)">Sell</button></td>
+        </tr>
+        <tr>
+            <td id= "name8"></td>
+            <td id="usd8">1</td>
+            <td id="change248"></td>
+            <td><button onclick = "buy(LTC_ID,LTC_P)">Buy</button></td>
+            <td><button onclick = "sell(LTC_ID,LTC_P)">Sell</button></td>
+        </tr>
+        <tr>
+            <td id= "name9"></td>
+            <td id="usd9">1</td>
+            <td id="change249"></td>
+            <td><button onclick = "buy(MON_ID,MON_P)">Buy</button></td>
+            <td><button onclick = "sell(MON_ID,MON_P)">Sell</button></td>
+        </tr>
+        <tr>
+            <td id= "name10"></td>
+            <td id="usd10">1</td>
+            <td id="change2410"></td>
+            <td><button onclick = "buy(NEM_ID,NEM_P)">Buy</button></td>
+            <td><button onclick = "sell(NEM_ID,NEM_P)">Sell</button></td>
+        </tr>
+
+    </table>
+</div>
+
+<!-- Contact Section -->
+<div class="w3-container w3-light-grey" style="padding:128px 16px" id="contact">
+    <h3 class="w3-center">CONTACT</h3>
+    <p class="w3-center w3-large">Lets get in touch. Send us a message:</p>
+    <div class="w3-row-padding" style="margin-top:64px">
+        <div class="w3-half">
+            <p><i class="fa fa-envelope fa-fw w3-xxlarge w3-margin-right"> </i> Email: tt532@drexel.edu</p>
+            <br>
+            <form action="MAILTO:tt532@drexel.edu" target="_blank">
+                <p><input class="w3-input w3-border" type="text" placeholder="Name" required name="Name"></p>
+                <p><input class="w3-input w3-border" type="text" placeholder="Email" required name="Email"></p>
+                <p><input class="w3-input w3-border" type="text" placeholder="Subject" required name="Subject"></p>
+                <p><input class="w3-input w3-border" type="text" placeholder="Message" required name="Message"></p>
+                <p>
+                    <button class="w3-button w3-black" type="submit">
+                        <i class="fa fa-paper-plane"></i> SEND MESSAGE
+                    </button>
+                </p>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="w3-center w3-black w3-padding-64">
+    <a href="#home" class="w3-button w3-light-grey"><i class="fa fa-arrow-up w3-margin-right"></i>To the top</a>
+    <div class="w3-xlarge w3-section">
+        <i class="fa fa-facebook-official w3-hover-opacity"></i>
+        <i class="fa fa-instagram w3-hover-opacity"></i>
+        <i class="fa fa-snapchat w3-hover-opacity"></i>
+        <i class="fa fa-pinterest-p w3-hover-opacity"></i>
+        <i class="fa fa-twitter w3-hover-opacity"></i>
+        <i class="fa fa-linkedin w3-hover-opacity"></i>
+    </div>
+    <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" title="W3.CSS" target="_blank" class="w3-hover-text-green">w3.css</a></p>
+</footer>
+
+
+
+</body>
+</html>
