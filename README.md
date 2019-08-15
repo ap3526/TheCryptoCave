@@ -7,4 +7,4 @@ The profile page is done in HTML and JavaScript.
 
 The tutorial page includes HTML and CSS.
 
-The sign in page was done in HTML with help from Google Firebase for integration
+The sign in page was done in HTML with help from Google Firebase for integration.
